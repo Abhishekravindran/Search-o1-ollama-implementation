@@ -170,3 +170,59 @@ Thought: The eastern sector of Colorado orogeny extends into the High Plains. So
 Thought: High Plains rise in elevation from around 1,800 to 7,000 ft, so the answer is 1,800 to 7,000 ft.
 <|begin_answer|>1,800 to 7,000 ft<|end_answer|>
 """]
+
+
+
+in prompt.py
+def STEP_STRIPPER(step: str, step_type: str):
+    """
+    Strip step prefixes and format the content appropriately.
+    
+    Args:
+        step (str): The step content to be stripped
+        step_type (str): Type of step ('observation', 'action', or 'thought')
+    
+    Returns:
+        str: Stripped and formatted step content
+    """
+    # First remove the step number prefix
+    step = re.sub(r'^(?i)(observation|action|thought)(?:\s+(\d+))?:', r'\1:', step)
+    
+    if step_type == 'observation':
+        # Handle search and lookup results
+        if '<|begin_search_result|>' in step:
+            # Extract content between tags
+            content = re.search(r'<\|begin_search_result\|>(.*?)<\|end_search_result\|>', step, re.DOTALL)
+            if content:
+                return f"Observation: {content.group(1).strip()}"
+        elif '<|begin_lookup_result|>' in step:
+            # Extract content between tags
+            content = re.search(r'<\|begin_lookup_result\|>(.*?)<\|end_lookup_result\|>', step, re.DOTALL)
+            if content:
+                return f"Observation: {content.group(1).strip()}"
+        return f"Observation: {step.replace('Observation:', '').strip()}"
+        
+    elif step_type == 'action':
+        # Handle search, lookup, and finish actions
+        if '<|begin_search_query|>' in step:
+            content = re.search(r'<\|begin_search_query\|>(.*?)<\|end_search_query\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Search[{content.group(1).strip()}]"
+        elif '<|begin_lookup_query|>' in step:
+            content = re.search(r'<\|begin_lookup_query\|>(.*?)<\|end_lookup_query\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Lookup[{content.group(1).strip()}]"
+        elif '<|begin_answer|>' in step:
+            content = re.search(r'<\|begin_answer\|>(.*?)<\|end_answer\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Finish[{content.group(1).strip()}]"
+        return f"Action: {step.replace('Action:', '').strip()}"
+        
+    elif step_type == 'thought':
+        # Clean up thought content
+        thought = step.replace('Thought:', '').strip()
+        # Remove any remaining tags
+        thought = re.sub(r'<\|.*?\|>', '', thought)
+        return f"Thought: {thought}"
+        
+    return step
