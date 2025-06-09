@@ -1,5 +1,11 @@
 import json
+import argparse
+from pathlib import Path
+from typing import Dict, List, Any
+import random
+import joblib
 import numpy as np
+import pandas as pd
 
 def clean_for_json(obj):
     """Recursively convert numpy types to native Python types."""
@@ -14,37 +20,102 @@ def clean_for_json(obj):
     else:
         return obj
 
-expel_data = []
+def load_hotpotqa_data(file_path: str) -> List[Dict[str, Any]]:
+    """Load HotpotQA data from joblib file."""
+    # Load the joblib file into a pandas DataFrame
+    df = joblib.load(file_path)
+    
+    # Convert to list of dictionaries with cleaned numpy types
+    data = []
+    for _, row in df.iterrows():
+        # Clean numpy types in context and supporting_facts
+        context = clean_for_json(row["context"])
+        supporting_facts = clean_for_json(row["supporting_facts"])
+        
+        data.append({
+            "_id": row["id"],
+            "type": row["type"],
+            "level": row["level"],
+            "question": row["question"],
+            "answer": row["answer"],
+            "context": context,
+            "supporting_facts": supporting_facts
+        })
+    
+    return data
 
-for idx, row in hotpot_data.iterrows():
-    question = row["question"]
-    answer = row["answer"]
-    sample_id = row["id"]
-    q_type = row["type"]
-    level = row["level"]
+def convert_to_knowself_format(example: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert a HotpotQA example to KnowSelf format."""
+    # Extract relevant information
+    question = example['question']
+    answer = example['answer']
+    supporting_facts = example['supporting_facts']
+    context = example['context']
+    
+    # Create the input text
+    input_text = f"Question: {question}\n\nContext:\n"
+    for title, sentences in context:
+        input_text += f"{title}:\n"
+        for sent in sentences:
+            input_text += f"{sent}\n"
+    
+    # Create the output text with special tokens
+    output_text = f"Let me analyze this step by step:\n"
+    
+    # Add reasoning steps
+    for i, (title, sent_id) in enumerate(supporting_facts, 1):
+        sent = next(sent for t, sents in context if t == title for sent in sents if sent_id == sents.index(sent))
+        output_text += f"Step {i}: {sent}\n"
+    
+    # Add final answer
+    output_text += f"\nFinal Answer: {answer}"
+    
+    return {
+        "input": input_text,
+        "output": output_text,
+        "metadata": {
+            "question_id": example['_id'],
+            "type": example['type'],
+            "level": example['level']
+        }
+    }
 
-    # Recursively clean numpy objects in these fields
-    context = clean_for_json(row["context"])
-    supporting_facts = clean_for_json(row["supporting_facts"])
+def main():
+    parser = argparse.ArgumentParser(description='Preprocess HotpotQA dataset for KnowSelf')
+    parser.add_argument('--input_file', type=str, required=True, help='Path to HotpotQA joblib file')
+    parser.add_argument('--output_file', type=str, required=True, help='Path to save processed data')
+    parser.add_argument('--train_ratio', type=float, default=0.9, help='Ratio of data to use for training')
+    args = parser.parse_args()
+    
+    # Load data
+    data = load_hotpotqa_data(args.input_file)
+    
+    # Convert to KnowSelf format
+    processed_data = [convert_to_knowself_format(example) for example in data]
+    
+    # Split into train/val
+    random.shuffle(processed_data)
+    split_idx = int(len(processed_data) * args.train_ratio)
+    train_data = processed_data[:split_idx]
+    val_data = processed_data[split_idx:]
+    
+    # Save processed data
+    output_path = Path(args.output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(train_data, f, indent=2)
+    
+    val_path = output_path.parent / f"val_{output_path.name}"
+    with open(val_path, 'w', encoding='utf-8') as f:
+        json.dump(val_data, f, indent=2)
+    
+    print(f"Processed {len(processed_data)} examples")
+    print(f"Saved {len(train_data)} training examples to {output_path}")
+    print(f"Saved {len(val_data)} validation examples to {val_path}")
 
-    # documents = [item[0] for item in context] if context else []
-
-    expel_data.append({
-        "id": sample_id,
-        "type": q_type,
-        "level": level,
-        "question": question,
-        "answer": answer,
-        "context": context,
-        # "documents": documents,
-        "supporting_facts": supporting_facts
-    })
-
-with open("hotpotqa_expel2_format.json", "w") as f:
-    json.dump(expel_data, f, indent=2)
-
-print(f"✅ Converted {len(expel_data)} samples for ExpeL.")
-
+if __name__ == '__main__':
+    main()
 
 SYSTEM_INSTRUCTION = """
 You are a reasoning assistant solving HotpotQA questions. You have special tools:
