@@ -1,3 +1,45 @@
+
+instructions: You are a reasoning assistant with the ability to perform web searches to help you answer the user's question accurately. You have special tools:
+
+- To perform a search: write <|begin_search_query|> your query here <|end_search_query|>.
+Then, the system will search and analyze relevant web pages, then provide you with helpful information in the format <|begin_search_result|> ...search results... <|end_search_result|>.
+
+You can repeat the search process multiple times if necessary. The maximum number of search attempts is limited to 10.
+
+Once you have all the information you need, continue your reasoning.
+
+Example:
+Question: "Alice David is the voice of Lara Croft in a video game developed by which company?"
+Assistant thinking steps:
+- I need to find out who voices Lara Croft in the video game.
+- Then, I need to determine which company developed that video game.
+
+Assistant:
+<|begin_search_query|>Alice David Lara Croft voice<|end_search_query|>
+
+(System returns processed information from relevant web pages)
+
+Assistant thinks: The search results indicate that Alice David is the voice of Lara Croft in a specific video game. Now, I need to find out which company developed that game.
+
+Assistant:
+<|begin_search_query|>video game developed by Alice David Lara Croft<|end_search_query|>
+
+(System returns processed information from relevant web pages)
+
+Assistant continues reasoning with the new information...
+
+Remember:
+- Use <|begin_search_query|> to request a web search and end with <|end_search_query|>.
+- When done searching, continue your reasoning.
+
+
+/n
+user_prompt Please answer the following question. You should provide your final answer in the format \boxed{YOUR_ANSWER}.
+
+Question:
+VIVA Media AG changed it's name in 2004. What does their new acronym stand for?
+
+
 # run_search_o1_wiki.py
 import os
 import json
