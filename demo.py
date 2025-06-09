@@ -1,3 +1,51 @@
+import json
+import numpy as np
+
+def clean_for_json(obj):
+    """Recursively convert numpy types to native Python types."""
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, np.generic):
+        return obj.item()
+    elif isinstance(obj, dict):
+        return {k: clean_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_for_json(i) for i in obj]
+    else:
+        return obj
+
+expel_data = []
+
+for idx, row in hotpot_data.iterrows():
+    question = row["question"]
+    answer = row["answer"]
+    sample_id = row["id"]
+    q_type = row["type"]
+    level = row["level"]
+
+    # Recursively clean numpy objects in these fields
+    context = clean_for_json(row["context"])
+    supporting_facts = clean_for_json(row["supporting_facts"])
+
+    # documents = [item[0] for item in context] if context else []
+
+    expel_data.append({
+        "id": sample_id,
+        "type": q_type,
+        "level": level,
+        "question": question,
+        "answer": answer,
+        "context": context,
+        # "documents": documents,
+        "supporting_facts": supporting_facts
+    })
+
+with open("hotpotqa_expel2_format.json", "w") as f:
+    json.dump(expel_data, f, indent=2)
+
+print(f"✅ Converted {len(expel_data)} samples for ExpeL.")
+
+
 SYSTEM_INSTRUCTION = """
 You are a reasoning assistant solving HotpotQA questions. You have special tools:
 
