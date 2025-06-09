@@ -80,6 +80,41 @@ in prompts def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[Chat
     )
 
 
+reflectionfewshot
+REFLECTION_FEWSHOTS = [
+"""
+Previous Trial:
+Question: The Rome Protocols were signed by three Prime Ministers one of which was assassinated as part of what?
+
+Thought: I need to search Rome Protocols, find the three Prime Ministers, then find what they were assassinated as part of.
+<|begin_search_query|>Rome Protocols<|end_search_query|>
+<|begin_search_result|>The Rome Protocols were a series of three international agreements concluded in Rome on 17 March 1934 between the governments of Austria, Hungary and Italy. They were signed by Italian Prime Minister Benito Mussolini, Austrian Chancellor Engelbert Dollfuss and Hungarian Prime Minister Gyula Gömbös.<|end_search_result|>
+
+Thought: The three Prime Ministers were Benito Mussolini, Engelbert Dollfuss, and Gyula Gömbös. I need to search Benito Mussolini and find what he was assassinated as part of.
+<|begin_search_query|>Benito Mussolini assassination<|end_search_query|>
+<|begin_search_result|>Benito Mussolini was executed by Italian partisans on April 28, 1945, during the final days of World War II.<|end_search_result|>
+
+Thought: Benito Mussolini was assassinated as part of World War II. So the Rome Protocols were signed by three Prime Ministers one of which was assassinated as part of World War II.
+<|begin_answer|>\boxed{World War II}<|end_answer|>
+
+Reflection: I searched one of the prime ministers involved in the signing, then attempted to answer right away. I should have searched each of the prime ministers, then looked up 'death' or 'assassination' on each of their pages in order to get more information before answering.
+""",
+"""
+Previous Trial:
+Question: Kam Heskin plays Paige Morgan in a 2004 film directed by who?
+
+Thought: I need to search Kam Heskin and Paige Morgan, find the 2004 film they are in, then find the director of the film.
+<|begin_search_query|>Kam Heskin<|end_search_query|>
+<|begin_search_result|>Kam Erika Heskin (born May 8, 1973) is an American actress. She began her career playing Caitlin Deschanel on the NBC daytime soap opera Sunset Beach (1998–1999), before appearing in films Planet of the Apes (2001) and Catch Me If You Can (2002). Heskin went on in 2003 to play Elizabeth Bennet in an independent film Pride & Prejudice: A Latter-Day Comedy, Robin in Charmed (2004), and Paige Morgan in The Prince and Me film franchise (2006–2010).<|end_search_result|>
+
+Thought: Kam Heskin plays Paige Morgan in The Prince and Me film franchise. I need to search The Prince and Me film franchise and find the director of the 2004 film.
+<|begin_search_query|>The Prince and Me 2004 film director<|end_search_query|>
+<|begin_search_result|>Could not find [The Prince and Me 2004 film]. Similar: ['The Prince & Me', 'The Prince & Me 2: The Royal Wedding', 'Kam Heskin', 'Prince of Darkness (film)', 'Prince of Persia: The Sands of Time (film)', 'Rob Knox', 'Alexander (2004 film)', 'Prince of Persia', 'Brooklynn Prince', 'Prince (musician)']<|end_search_result|>
+
+Thought: I need to search The Prince & Me (2004 film) instead.
+<|begin_search_query|>The Prince & Me 2004 film<|end_search_query|>
+<|begin_search_result|>Could not find [The Prince & Me 2004 film]. Similar: ['The Prince & Me', 'The Prince & Me 2: The Royal Wedding', 'Prince of Darkness (film)', 'Prince of Persia: The Sands of Time (film)', 'Rob Knox', 'Alexander (2004 film)', 'Prince (musician)', 'Prince of Persia', 'Kam Heskin
+
 in envs
 
 
