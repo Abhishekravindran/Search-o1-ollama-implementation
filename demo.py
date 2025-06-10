@@ -1,25 +1,118 @@
-think 2: <think>Alright, so I need to figure out what the new acronym stands for after Viva Media AG changed its name in 2004. Let's start by recalling some basics about this company.I know that Viva Media AG is a media company based in Spain. They're known for their entertainment division, VEA Studios, which makes movies and TV shows related to music. Around 2004, the company went through significant rebranding to expand beyond Latin America into more global markets. That means they probably introduced new names or acronyms as part of this strategy.Brands often use new names and acronyms during major rebrandings to align with their new image or market focus. The acronym can help simplify brand identity and make it more memorable. So, I'm thinking that Viva Media AG must have come up with a new acronym in 2004 as part of this expansion.I seem to remember hearing something about them using an acronym that combines "Viva" with other relevant terms related to their new focus areas like interactivity, digital presence, live events, and global reach. After some thought, I think the acronym might be VIVADLX.Breaking down VIVADLX:- **Viva**: This likely stands for their core brand identity.- **Interactive (I)**: Emphasizing their focus on interactive content.- **Digital (D)**: Highlighting their digital presence and platforms.- **Live (L)**: Indicating live events and real-time engagement.- **X**: Often used as a shorthand for "World," representing global reach.Putting it all together, VIVADLX seems to encapsulate their expansion into various global markets with a focus on interactive, digital content, and live events. It reflects their commitment to connectivity and global presence in media.To confirm this, I should probably look up official announcements or press releases from 2004 regarding Viva Media AG's name change. However, based on my current knowledge and reasoning, I'm pretty confident that the new acronym is VIVADLX.</think>The new acronym after Viva Media AG's rebranding in 2004 is **VIVADLX**.- **Viva**: Reflects their core brand identity.- **Interactive (I)**: Focuses on interactive content.- **Digital (D)**: Emphasizes digital platforms and presence.- **Live (L)**: Indicates live events and real-time engagement.- **X**: Represents global reach, often used as a shorthand for "World."This acronym encapsulates Viva Media AG's commitment to global expansion, interactivity, digital presence, live events, and connectivity in media.**Final Answer:** The new acronym is \boxed{VIVADLX}.
 
 
-now i am gettng below
 
-Thought 1: Okay, so I'm trying to figure out what the new acronym stands for after VIVA Media AG changed its name in 2004. Let me break this down step by step.First, the company was previously known as VIVA Media AG and they changed their name in 2004. Now I need to find out what their new acronym is. The acronym would likely be a set of letters that represent something about the company's new branding or focus.I should probably start by searching for "VIVA Media AG 2004 name change" to see if there's any information available on when they renamed and what their new name was. If I can't find an exact name, maybe looking up the acronym they use now would help.Wait, since this is a search-based approach, perhaps using Search[VIVA Media AG] could give me some info. From the example given earlier, when searching for something like Colorado orogeny, it sometimes redirected to another related term if the first wasn't found. So maybe VIVA Media AG's new name has an acronym that I need to find.If the search returns nothing specific about 2004, perhaps they didn't have a standard acronym yet, but more likely, after renaming, their name changed into something with an acronym like "VIB" or similar.Alternatively, maybe I should look up the company's official website or news articles from around 2004 to find out about their rebranding. Since I can't access external links here, perhaps using the Lookup function would help if I have a keyword.Wait, but according to the guidelines, I can use Search and Lookup functions as defined. So first, search for "VIVA Media AG name change 2004" or something similar to see what happened.
-Error executing job with overrides: ['benchmark=hotpotqa', 'run_name=hotpotQA', 'testing=false', 'resume=false']
-Traceback (most recent call last):
-  File "/home/data/abhishek/25A/expel_reasoning/train.py", line 132, in main
-    react_agent.run(mode='train')
-  File "/home/data/abhishek/25A/expel_reasoning/agent/expel.py", line 282, in run
-    return ReflectAgent.run(self, reset)
-  File "/home/data/abhishek/25A/expel_reasoning/agent/reflect.py", line 48, in run
-    ReactAgent.run(self, reset)
-  File "/home/data/abhishek/25A/expel_reasoning/agent/react.py", line 89, in run
-    self.step()
-  File "/home/data/abhishek/25A/expel_reasoning/agent/reflect.py", line 54, in step
-    ReactAgent.step(self)
-  File "/home/data/abhishek/25A/expel_reasoning/agent/react.py", line 112, in step
-    observation, self.reward, self.terminated, self.truncated, _ = self.env.step(others['action'])
-KeyError: 'action'
+from typing import Tuple, Dict, Any, List
+import pickle
+import re
 
+from langchain.prompts.chat import HumanMessagePromptTemplate
+from langchain.schema import (
+    AIMessage,
+    HumanMessage,
+    ChatMessage,
+)
+
+
+SYSTEM_INSTRUCTION = """Solve a question answering task with interleaving think, Action, Observation steps. think can reason about the current situation, and Action can be three types:
+(1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
+(2) Lookup[keyword], which returns the next sentence containing keyword in the last passage successfully found by Search.
+(3) Finish[answer], which returns the answer and finishes the task.
+Guidelines:
+- Break down complex questions into smaller parts
+- Use natural language in your queries
+- Explain your reasoning before each action
+- Submit answers only when you're confident
+- Format your final answer as \boxed{YOUR_ANSWER}
+
+"""
+
+FEWSHOTS = ["""
+Question: What is the elevation range for the area that the eastern sector of the Colorado orogeny extends into?
+think: I need to search Colorado orogeny, find the area that the eastern sector of the Colorado orogeny extends into, then find the elevation range of the area.
+<|begin_search_query|>Colorado orogeny<|end_search_query|>
+<|begin_search_result|>The Colorado orogeny was an episode of mountain building (an orogeny) in Colorado and surrounding areas.<|end_search_result|>
+think: It does not mention the eastern sector. So I need to look up eastern sector.
+<|begin_lookup_query|>eastern sector<|end_lookup_query|>
+<|begin_lookup_result|>The eastern sector extends into the High Plains and is called the Central Plains orogeny.<|end_lookup_result|>
+think: The eastern sector of Colorado orogeny extends into the High Plains. So I need to search High Plains and find its elevation range.
+<|begin_search_query|>High Plains elevation range<|end_search_query|>
+<|begin_search_result|>The High Plains are a subregion of the Great Plains. From east to west, the High Plains rise in elevation from around 1,800 to 7,000 ft (550 to 2,130 m).<|end_search_result|>
+think: High Plains rise in elevation from around 1,800 to 7,000 ft, so the answer is 1,800 to 7,000 ft.
+<|begin_answer|>1,800 to 7,000 ft<|end_answer|>
+"""]
+# reflectionfewshot
+REFLECTION_FEWSHOTS = [
+"""
+Previous Trial:
+Question: The Rome Protocols were signed by three Prime Ministers one of which was assassinated as part of what?
+
+think: I need to search Rome Protocols, find the three Prime Ministers, then find what they were assassinated as part of.
+<|begin_search_query|>Rome Protocols<|end_search_query|>
+<|begin_search_result|>The Rome Protocols were a series of three international agreements concluded in Rome on 17 March 1934 between the governments of Austria, Hungary and Italy. They were signed by Italian Prime Minister Benito Mussolini, Austrian Chancellor Engelbert Dollfuss and Hungarian Prime Minister Gyula Gömbös.<|end_search_result|>
+
+think: The three Prime Ministers were Benito Mussolini, Engelbert Dollfuss, and Gyula Gömbös. I need to search Benito Mussolini and find what he was assassinated as part of.
+<|begin_search_query|>Benito Mussolini assassination<|end_search_query|>
+<|begin_search_result|>Benito Mussolini was executed by Italian partisans on April 28, 1945, during the final days of World War II.<|end_search_result|>
+
+think: Benito Mussolini was assassinated as part of World War II. So the Rome Protocols were signed by three Prime Ministers one of which was assassinated as part of World War II.
+<|begin_answer|>\boxed{World War II}<|end_answer|>
+
+Reflection: I searched one of the prime ministers involved in the signing, then attempted to answer right away. I should have searched each of the prime ministers, then looked up 'death' or 'assassination' on each of their pages in order to get more information before answering.
+""",
+"""
+Previous Trial:
+Question: Kam Heskin plays Paige Morgan in a 2004 film directed by who?
+
+think: I need to search Kam Heskin and Paige Morgan, find the 2004 film they are in, then find the director of the film.
+<|begin_search_query|>Kam Heskin<|end_search_query|>
+<|begin_search_result|>Kam Erika Heskin (born May 8, 1973) is an American actress. She began her career playing Caitlin Deschanel on the NBC daytime soap opera Sunset Beach (1998–1999), before appearing in films Planet of the Apes (2001) and Catch Me If You Can (2002). Heskin went on in 2003 to play Elizabeth Bennet in an independent film Pride & Prejudice: A Latter-Day Comedy, Robin in Charmed (2004), and Paige Morgan in The Prince and Me film franchise (2006–2010).<|end_search_result|>
+
+think: Kam Heskin plays Paige Morgan in The Prince and Me film franchise. I need to search The Prince and Me film franchise and find the director of the 2004 film.
+<|begin_search_query|>The Prince and Me 2004 film director<|end_search_query|>
+<|begin_search_result|>Could not find [The Prince and Me 2004 film]. Similar: ['The Prince & Me', 'The Prince & Me 2: The Royal Wedding', 'Kam Heskin', 'Prince of Darkness (film)', 'Prince of Persia: The Sands of Time (film)', 'Rob Knox', 'Alexander (2004 film)', 'Prince of Persia', 'Brooklynn Prince', 'Prince (musician)']<|end_search_result|>
+
+think: I need to search The Prince & Me (2004 film) instead.
+<|begin_search_query|>The Prince & Me 2004 film<|end_search_query|>
+<|begin_search_result|>Could not find [The Prince & Me 2004 film]. Similar: ['The Prince & Me', 'The Prince & Me 2: The Royal Wedding', 'Prince of Darkness (film)', 'Prince of Persia: The Sands of Time (film)', 'Rob Knox', 'Alexander (2004 film)', 'Prince (musician)', 'Prince of Persia', 'Kam Heskin
+
+"""]
+
+SYSTEM_INSTRUCTION = """
+You are a reasoning assistant solving HotpotQA questions. You have special tools:
+
+1. Search Tool:
+   - Format: <|begin_search_query|> your query here <|end_search_query|>
+   - Use this to search for relevant information
+   - You can make multiple searches (max 10 attempts)
+
+2. Lookup Tool:
+   - Format: <|begin_lookup_query|> specific query <|end_lookup_query|>
+   - Use this to look up specific details from search results
+
+3. Answer Submission:
+   - Format: <|begin_answer|> your answer <|end_answer|>
+   - Use this when you're confident about your answer
+
+Guidelines:
+- Break down complex questions into smaller parts
+- Use natural language in your queries
+- Explain your reasoning before each action
+- Submit answers only when you're confident
+- Format your final answer as \boxed{YOUR_ANSWER}
+"""
+
+
+human_instruction_template = """{instruction}You may take maximum of {max_steps} steps.
+Here are some examples:"""
+
+HUMAN_INSTRUCTION = HumanMessagePromptTemplate.from_template(human_instruction_template)
+
+human_instruction_reflection_template = """Here are some examples:"""
+HUMAN_REFLECTION_INSTRUCTION = HumanMessagePromptTemplate.from_template(human_instruction_reflection_template)
+
+SYSTEM_CRITIQUE_EXISTING_RULES_INSTRUCTION = """You will be given two previous task trials in which you were given access to a Docstore API environment and a question to answer: one successful and one unsuccessful trial. You failed the trial either because you guessed the wrong answer with Finish[<answer>], or you used up your set number of reasoning steps."""
+SYSTEM_CRITIQUE_ALL_SUCCESS_EXISTING_RULES_INSTRUCTION = """You will be given successful tasks trials in which you were given access to a Docstore API environment and a question to answer."""
+SYSTEM_REFLECTION_INSTRUCTION = """You will be given a previous reasoning trial in which you were given access to a Docstore API environment and a question to answer. You were unsuccessful in answering the question either because you guessed the wrong answer with Finish[<answer>], or you used up your set number of reasoning steps. In a few sentences, Diagnose a possible reason for failure and devise a new, concise, high level plan that aims to mitigate the same failure. Use complete sentences."""
 
 
 def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[ChatMessage, str, Dict[str, Any]]:
@@ -76,6 +169,122 @@ def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[ChatMessage, st
         {}
     )
 
+
+def OBSERVATION_FORMATTER(observation: str, step: int, *args, **kwargs) -> Tuple[ChatMessage, str]:
+    return HumanMessage(content=f"Observation {step}: " + observation.rstrip(':')), 'append'
+
+def STEP_IDENTIFIER(line: str) -> str:
+    line = line.strip()
+    pattern = re.compile(r'^(?i)action(?:\s+(\d+))?:')
+    match = pattern.match(line)
+    if match:
+        return 'action'
+    pattern = re.compile(r'^(?i)observation(?:\s+(\d+))?:')
+    match = pattern.match(line)
+    if match:
+        return 'observation'
+    return 'think'
+
+def CYCLER(lines: str) -> List[str]:
+    new_lines = []
+    scratch_pad = ''
+    for line in lines.split('\n'):
+
+        # line is action
+        pattern = re.compile(r'^(?i)action(?:\s+(\d+))?:')
+        match = pattern.match(line)
+        if match:
+            if scratch_pad != '':
+                new_lines.append(scratch_pad.strip())
+                scratch_pad = ''
+            new_lines.append(line)
+            continue
+
+        # line is think
+        pattern = re.compile(r'^(?i)think(?:\s+(\d+))?:')
+        match = pattern.match(line)
+        if match:
+            if scratch_pad != '':
+                new_lines.append(scratch_pad.strip())
+                scratch_pad = ''
+            new_lines.append(line)
+            continue
+
+        # step is observation
+        scratch_pad += line + '\n'
+
+    # the rest of the scratch pad
+    if scratch_pad != '':
+        new_lines.append(scratch_pad.strip())
+    return new_lines
+
+REFLECTION_PREFIX = '\nReflection:'
+def PREVIOUS_TRIALS_FORMATTER(reflections: List[str], include_prefix: bool = True) -> str:
+    if reflections == []:
+        return ''
+    if include_prefix:
+        memory_prefix = "You have attempted to solve the task before but failed. The following reflection(s) give a plan to avoid failing the task in the same way you did previously. Use them to improve your strategy of solving the task successfully."
+    else:
+        memory_prefix = ''
+    memory_prefix += '\nReflections:'
+    for reflection in reflections:
+        memory_prefix += f"\n- {reflection.strip()}"
+    return memory_prefix
+
+
+
+def STEP_STRIPPER(step: str, step_type: str):
+    """
+    Strip step prefixes and format the content appropriately.
+    
+    Args:
+        step (str): The step content to be stripped
+        step_type (str): Type of step ('observation', 'action', or 'think')
+    
+    Returns:
+        str: Stripped and formatted step content
+    """
+    # First remove the step number prefix
+    step = re.sub(r'^(?i)(observation|action|think)(?:\s+(\d+))?:', r'\1:', step)
+    
+    if step_type == 'observation':
+        # Handle search and lookup results
+        if '<|begin_search_result|>' in step:
+            # Extract content between tags
+            content = re.search(r'<\|begin_search_result\|>(.*?)<\|end_search_result\|>', step, re.DOTALL)
+            if content:
+                return f"Observation: {content.group(1).strip()}"
+        elif '<|begin_lookup_result|>' in step:
+            # Extract content between tags
+            content = re.search(r'<\|begin_lookup_result\|>(.*?)<\|end_lookup_result\|>', step, re.DOTALL)
+            if content:
+                return f"Observation: {content.group(1).strip()}"
+        return f"Observation: {step.replace('Observation:', '').strip()}"
+        
+    elif step_type == 'action':
+        # Handle search, lookup, and finish actions
+        if '<|begin_search_query|>' in step:
+            content = re.search(r'<\|begin_search_query\|>(.*?)<\|end_search_query\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Search[{content.group(1).strip()}]"
+        elif '<|begin_lookup_query|>' in step:
+            content = re.search(r'<\|begin_lookup_query\|>(.*?)<\|end_lookup_query\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Lookup[{content.group(1).strip()}]"
+        elif '<|begin_answer|>' in step:
+            content = re.search(r'<\|begin_answer\|>(.*?)<\|end_answer\|>', step, re.DOTALL)
+            if content:
+                return f"Action: Finish[{content.group(1).strip()}]"
+        return f"Action: {step.replace('Action:', '').strip()}"
+        
+    elif step_type == 'think':
+        # Clean up think content
+        think = step.replace('think:', '').strip()
+        # Remove any remaining tags
+        think = re.sub(r'<\|.*?\|>', '', think)
+        return f"think: {think}"
+        
+    return step
 
 
 from typing import Callable, List
