@@ -3,7 +3,59 @@ think 2: <think>Alright, so I need to figure out what the new acronym stands for
 
 
 
+def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[ChatMessage, str, Dict[str, Any]]:
+    # First, try to extract the final answer if it exists
+    boxed_answer_pattern = r'\\boxed{([^}]+)}'
+    boxed_match = re.search(boxed_answer_pattern, llm_output)
+    if boxed_match:
+        answer = boxed_match.group(1)
+        content = f"Action {step}: Finish[{answer}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Finish[{answer}]"}
+        )
 
+    # Try to extract search queries
+    search_pattern = r'<\|begin_search_query\|>(.*?)<\|end_search_query\|>'
+    search_match = re.search(search_pattern, llm_output, re.DOTALL)
+    if search_match:
+        query = search_match.group(1).strip()
+        content = f"Action {step}: Search[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Search[{query}]"}
+        )
+
+    # Try to extract lookup queries
+    lookup_pattern = r'<\|begin_lookup_query\|>(.*?)<\|end_lookup_query\|>'
+    lookup_match = re.search(lookup_pattern, llm_output, re.DOTALL)
+    if lookup_match:
+        query = lookup_match.group(1).strip()
+        content = f"Action {step}: Lookup[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Lookup[{query}]"}
+        )
+
+    # If no action found, treat as thought
+    # Extract thought from <think> tags if present
+    think_pattern = r'<think>(.*?)</think>'
+    think_match = re.search(think_pattern, llm_output, re.DOTALL)
+    if think_match:
+        thought = think_match.group(1).strip()
+        content = f"Thought {step}: {thought}"
+    else:
+        # If no <think> tags, use the whole output as thought
+        content = f"Thought {step}: {llm_output.rstrip(':')}"
+    
+    return (
+        AIMessage(content=content) if ai_message else HumanMessage(content=content),
+        'thought',
+        {}
+    )
 
 
 
