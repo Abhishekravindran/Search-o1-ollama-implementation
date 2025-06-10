@@ -2,18 +2,16 @@ from typing import Callable, List
 import time
 import json
 import requests
-from langchain.chat_models import ChatOpenAI
-from langchain_community.chat_models import ChatOllama
 from langchain.schema import ChatMessage
 
-class ReasoningModelWrapper:
+class OllamaWrapper:
     def __init__(self, base_url: str = "http://192.168.4.162:11434", model: str = "qwq:latest"):
         self.base_url = base_url.rstrip('/')
         self.model = model
         self.api_url = f"{self.base_url}/api/generate"
 
     def __call__(self, messages: List[ChatMessage], stop: List[str] = [], replace_newline: bool = True) -> str:
-        # Convert messages to a prompt format that preserves the original structure
+        # Convert messages to a prompt format Ollama can understand
         prompt = ""
         for msg in messages:
             role = msg.type
@@ -27,7 +25,7 @@ class ReasoningModelWrapper:
         
         prompt += "Assistant: "
 
-        # Make request to Ollama API with reasoning model
+        # Make request to Ollama API
         for i in range(3):  # Retry logic
             try:
                 response = requests.post(
@@ -50,7 +48,7 @@ class ReasoningModelWrapper:
                 print(f'\nRetrying {i}... Error: {str(e)}')
                 time.sleep(1)
         else:
-            raise RuntimeError('Failed to generate response from reasoning model')
+            raise RuntimeError('Failed to generate response from Ollama')
 
         if replace_newline:
             output = output.replace('\n', '')
@@ -62,8 +60,8 @@ class GPTWrapper:
         if long_ver:
             llm_name = 'qwq:latest'
         
-        # Initialize the reasoning model wrapper
-        self.llm = ReasoningModelWrapper(
+        # Initialize the Ollama wrapper directly
+        self.llm = OllamaWrapper(
             base_url="http://192.168.4.162:11434",
             model=self.model_name
         )
@@ -95,8 +93,6 @@ def LLM_CLS(llm_name: str, openai_api_key: str, long_ver: bool) -> Callable:
         return GPTWrapper(llm_name, openai_api_key, long_ver)
     else:
         raise ValueError(f"Unknown LLM model name: {llm_name}")
-
-
 
 
 
