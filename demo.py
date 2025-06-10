@@ -1,71 +1,39 @@
-OLLAMA_HOST = 'http://192.168.4.168:11434'  # or 'http://192.168.4.168:11434' if remote
-
-client = ollama.Client(host=OLLAMA_HOST)
-model="gemma3:12b"
-def api_call(messages, model="gemma3:12b", temperature=0.7, max_tokens=4096,
-             max_retries=10, json_format=False, stream=False):
-    for attempt in range(max_retries):
-        try:
-            print("message",messages)
-            response = client.chat(
-                model=model,
-                messages=messages,
-                # temperature=temperature,
-                # max_tokens=max_tokens,
-                stream=stream,
-            )
-            print(response)
-            content = response.message.content
-
-
-
 from typing import Callable, List
 import time
-import json
-import requests
+import ollama
 from langchain.schema import ChatMessage
 
 class OllamaWrapper:
-    def __init__(self, base_url: str = "http://192.168.4.162:11434", model: str = "qwq:latest"):
-        self.base_url = base_url.rstrip('/')
+    def __init__(self, host: str = "http://192.168.4.168:11434", model: str = "qwq:latest"):
+        self.client = ollama.Client(host=host)
         self.model = model
-        self.api_url = f"{self.base_url}/api/generate"
 
     def __call__(self, messages: List[ChatMessage], stop: List[str] = [], replace_newline: bool = True) -> str:
-        # Convert messages to a prompt format Ollama can understand
-        prompt = ""
+        # Convert messages to Ollama format
+        ollama_messages = []
         for msg in messages:
             role = msg.type
             content = msg.content
             if role == "human":
-                prompt += f"Human: {content}\n"
+                ollama_messages.append({"role": "user", "content": content})
             elif role == "ai":
-                prompt += f"Assistant: {content}\n"
+                ollama_messages.append({"role": "assistant", "content": content})
             else:
-                prompt += f"{content}\n"
-        
-        prompt += "Assistant: "
+                ollama_messages.append({"role": "system", "content": content})
 
-        # Make request to Ollama API
-        for i in range(3):  # Retry logic
+        # Make request to Ollama
+        for i in range(6):  # Retry logic
             try:
-                response = requests.post(
-                    self.api_url,
-                    json={
-                        "model": self.model,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.0,
-                            "stop": stop if stop else None
-                        }
-                    },
-                    timeout=60
+                print("input_messages", ollama_messages)
+                response = self.client.chat(
+                    model=self.model,
+                    messages=ollama_messages,
+                    stream=False
                 )
-                response.raise_for_status()
-                output = response.json()["response"].strip()
+                output = response.message.content.strip()
+                print("output", output)
                 break
-            except (requests.exceptions.RequestException, KeyError) as e:
+            except Exception as e:
                 print(f'\nRetrying {i}... Error: {str(e)}')
                 time.sleep(1)
         else:
@@ -81,9 +49,9 @@ class GPTWrapper:
         if long_ver:
             llm_name = 'qwq:latest'
         
-        # Initialize the Ollama wrapper directly
+        # Initialize the Ollama wrapper
         self.llm = OllamaWrapper(
-            base_url="http://192.168.4.162:11434",
+            host="http://192.168.4.168:11434",
             model=self.model_name
         )
 
@@ -114,7 +82,6 @@ def LLM_CLS(llm_name: str, openai_api_key: str, long_ver: bool) -> Callable:
         return GPTWrapper(llm_name, openai_api_key, long_ver)
     else:
         raise ValueError(f"Unknown LLM model name: {llm_name}")
-
 
 
 
