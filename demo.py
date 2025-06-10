@@ -1,3 +1,24 @@
+OLLAMA_HOST = 'http://192.168.4.168:11434'  # or 'http://192.168.4.168:11434' if remote
+
+client = ollama.Client(host=OLLAMA_HOST)
+model="gemma3:12b"
+def api_call(messages, model="gemma3:12b", temperature=0.7, max_tokens=4096,
+             max_retries=10, json_format=False, stream=False):
+    for attempt in range(max_retries):
+        try:
+            print("message",messages)
+            response = client.chat(
+                model=model,
+                messages=messages,
+                # temperature=temperature,
+                # max_tokens=max_tokens,
+                stream=stream,
+            )
+            print(response)
+            content = response.message.content
+
+
+
 from typing import Callable, List
 import time
 import json
