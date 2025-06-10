@@ -1,3 +1,15 @@
+generate_endpoint = f"http://192.168.4.162:11434/api/chat"
+headers = {'Content-Type': 'application/json'}
+ 
+payload = {
+"model": "qwq:latest",
+"messages": msg_history,
+"stream": False,
+"options": {"temperature": 1.0}}
+response = requests.post(generate_endpoint, headers=headers, json=payload).json()
+content = response.get('message', {}).get('content', '')
+
+
 from typing import Callable, List
 import time
 from langchain.chat_models import ChatOpenAI
