@@ -1,3 +1,79 @@
+from typing import Callable, List
+import time
+from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOllama 
+# from langchain_openai import ChatOpenAI
+from langchain.schema import ChatMessage
+import openai
+
+
+
+class GPTWrapper:
+    def __init__(self, llm_name: str, openai_api_key: str, long_ver: bool):
+        self.model_name = 'qwq:latest'
+        if long_ver:
+            llm_name = 'qwq:latest'
+        # self.llm = ChatOpenAI(
+        #     model=llm_name,
+        #     temperature=0.0,
+        #     openai_api_key="ollama",
+        #     base_url="http://192.168.4.168:11434"
+        # )
+        self.llm = ChatOllama(
+            model=self.model_name,
+            base_url="http://192.168.4.162:11434",  # your Ollama instance
+            # temperature=0.5 
+        )
+        
+
+    def __call__(self, messages: List[ChatMessage], stop: List[str] = [], replace_newline: bool = True) -> str:
+        kwargs = {}
+        if stop != []:
+            kwargs['stop'] = stop
+        for i in range(6):
+            try:
+                print("this is llm", self.llm)
+                print("input_message",messages)
+                print("\n","\n")
+                output = self.llm(messages, **kwargs).content#.strip('\n').strip()
+                print("outputttttttttttt",output)
+                end()
+                break
+
+            except Exception as e:
+                print(f'\nRetrying {i}...')
+                time.sleep(1)
+        else:
+            raise RuntimeError('Failed to generate response')
+
+        if replace_newline:
+            output = output.replace('\n', '')
+        return output
+
+def LLM_CLS(llm_name: str, openai_api_key: str, long_ver: bool) -> Callable:
+    if 'qwq:latest' in llm_name:
+        return GPTWrapper(llm_name, openai_api_key, long_ver)
+    else:
+        raise ValueError(f"Unknown LLM model name: {llm_name}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import json
 import argparse
 from pathlib import Path
