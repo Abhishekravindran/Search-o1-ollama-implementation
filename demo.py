@@ -1,3 +1,236 @@
+SYSTEM_INSTRUCTION = """Solve a question answering task with interleaving think, Action, Observation steps. 
+
+Think: Use <think> tags to explain your reasoning process. Be detailed in your thinking.
+
+Actions can be three types:
+(1) <|begin_search_query|>entity<|end_search_query|>, which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
+(2) <|begin_lookup_query|>keyword<|end_lookup_query|>, which returns the next sentence containing keyword in the last passage successfully found by Search.
+(3) <|begin_answer|>answer<|end_answer|>, which returns the answer and finishes the task.
+
+Guidelines:
+- Break down complex questions into smaller parts
+- Use natural language in your queries
+- Explain your reasoning before each action
+- Submit answers only when you're confident
+- Format your final answer as \boxed{YOUR_ANSWER}
+"""
+
+
+
+
+
+
+
+
+def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[ChatMessage, str, Dict[str, Any]]:
+    # First, try to extract the final answer if it exists
+    boxed_answer_pattern = r'\\boxed{([^}]+)}'
+    boxed_match = re.search(boxed_answer_pattern, llm_output)
+    if boxed_match:
+        answer = boxed_match.group(1)
+        content = f"Action {step}: Finish[{answer}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Finish[{answer}]"}
+        )
+
+    # Try to extract search queries
+    search_pattern = r'<\|begin_search_query\|>(.*?)<\|end_search_query\|>'
+    search_match = re.search(search_pattern, llm_output, re.DOTALL)
+    if search_match:
+        query = search_match.group(1).strip()
+        content = f"Action {step}: Search[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Search[{query}]"}
+        )
+
+    # Try to extract lookup queries
+    lookup_pattern = r'<\|begin_lookup_query\|>(.*?)<\|end_lookup_query\|>'
+    lookup_match = re.search(lookup_pattern, llm_output, re.DOTALL)
+    if lookup_match:
+        query = lookup_match.group(1).strip()
+        content = f"Action {step}: Lookup[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Lookup[{query}]"}
+        )
+
+    # Try to extract answer
+    answer_pattern = r'<\|begin_answer\|>(.*?)<\|end_answer\|>'
+    answer_match = re.search(answer_pattern, llm_output, re.DOTALL)
+    if answer_match:
+        answer = answer_match.group(1).strip()
+        content = f"Action {step}: Finish[{answer}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Finish[{answer}]"}
+        )
+
+    # If no action found, treat as thought
+    # Extract thought from <think> tags if present
+    think_pattern = r'<think>(.*?)</think>'
+    think_match = re.search(think_pattern, llm_output, re.DOTALL)
+    if think_match:
+        thought = think_match.group(1).strip()
+        content = f"Thought {step}: {thought}"
+    else:
+        # If no <think> tags, use the whole output as thought
+        content = f"Thought {step}: {llm_output.rstrip(':')}"
+    
+    return (
+        AIMessage(content=content) if ai_message else HumanMessage(content=content),
+        'thought',
+        {}
+    )
+
+
+
+
+
+
+
+def LLM_PARSER(llm_output, step: int, ai_message: bool) -> Tuple[ChatMessage, str, Dict[str, Any]]:
+    # First, try to extract the final answer if it exists
+    boxed_answer_pattern = r'\\boxed{([^}]+)}'
+    boxed_match = re.search(boxed_answer_pattern, llm_output)
+    if boxed_match:
+        answer = boxed_match.group(1)
+        content = f"Action {step}: Finish[{answer}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Finish[{answer}]"}
+        )
+
+    # Try to extract search queries
+    search_pattern = r'<\|begin_search_query\|>(.*?)<\|end_search_query\|>'
+    search_match = re.search(search_pattern, llm_output, re.DOTALL)
+    if search_match:
+        query = search_match.group(1).strip()
+        content = f"Action {step}: Search[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Search[{query}]"}
+        )
+
+    # Try to extract lookup queries
+    lookup_pattern = r'<\|begin_lookup_query\|>(.*?)<\|end_lookup_query\|>'
+    lookup_match = re.search(lookup_pattern, llm_output, re.DOTALL)
+    if lookup_match:
+        query = lookup_match.group(1).strip()
+        content = f"Action {step}: Lookup[{query}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Lookup[{query}]"}
+        )
+
+    # Try to extract answer
+    answer_pattern = r'<\|begin_answer\|>(.*?)<\|end_answer\|>'
+    answer_match = re.search(answer_pattern, llm_output, re.DOTALL)
+    if answer_match:
+        answer = answer_match.group(1).strip()
+        content = f"Action {step}: Finish[{answer}]"
+        return (
+            AIMessage(content=content) if ai_message else HumanMessage(content=content),
+            'action',
+            {'action': f"Finish[{answer}]"}
+        )
+
+    # If no action found, treat as thought
+    # Extract thought from <think> tags if present
+    think_pattern = r'<think>(.*?)</think>'
+    think_match = re.search(think_pattern, llm_output, re.DOTALL)
+    if think_match:
+        thought = think_match.group(1).strip()
+        content = f"Thought {step}: {thought}"
+    else:
+        # If no <think> tags, use the whole output as thought
+        content = f"Thought {step}: {llm_output.rstrip(':')}"
+    
+    return (
+        AIMessage(content=content) if ai_message else HumanMessage(content=content),
+        'thought',
+        {}
+    )
+
+
+
+
+
+def STEP_IDENTIFIER(line: str) -> str:
+    line = line.strip()
+    
+    # Check for action patterns
+    action_patterns = [
+        r'<\|begin_search_query\|>',
+        r'<\|begin_lookup_query\|>',
+        r'<\|begin_answer\|>',
+        r'\\boxed{'
+    ]
+    
+    for pattern in action_patterns:
+        if re.search(pattern, line):
+            return 'action'
+    
+    # Check for observation pattern
+    if re.search(r'<\|begin_search_result\|>|<\|begin_lookup_result\|>', line):
+        return 'observation'
+    
+    # Check for think pattern
+    if re.search(r'<think>', line):
+        return 'think'
+    
+    # Default to think
+    return 'think'
+
+
+
+def CYCLER(lines: str) -> List[str]:
+    new_lines = []
+    scratch_pad = ''
+    
+    for line in lines.split('\n'):
+        # Check for action patterns
+        if any(pattern in line for pattern in ['<|begin_search_query|>', '<|begin_lookup_query|>', '<|begin_answer|>']):
+            if scratch_pad != '':
+                new_lines.append(scratch_pad.strip())
+                scratch_pad = ''
+            new_lines.append(line)
+            continue
+
+        # Check for think pattern
+        if '<think>' in line:
+            if scratch_pad != '':
+                new_lines.append(scratch_pad.strip())
+                scratch_pad = ''
+            new_lines.append(line)
+            continue
+
+        # Add to scratch pad
+        scratch_pad += line + '\n'
+
+    # Add remaining scratch pad
+    if scratch_pad != '':
+        new_lines.append(scratch_pad.strip())
+    
+    return new_lines
+
+
+
+
+
+
+
+
+
+
 
 
 
